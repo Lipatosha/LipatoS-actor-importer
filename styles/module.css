@@ -1,0 +1,30 @@
+.lipatos-actor-importer-button {
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: 30px;
+  margin: 5px 0 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.lipatos-actor-importer-button i { margin-right: 2px; }
+.lipatos-actor-importer-dialog { min-width: min(540px, 80vw); }
+.lipatos-actor-importer-dialog textarea {
+  display: block;
+  width: 100%;
+  min-height: 300px;
+  resize: vertical;
+  font: 12px/1.5 monospace;
+  box-sizing: border-box;
+  white-space: pre;
+  tab-size: 2;
+}
+.lipatos-actor-importer-dialog p { margin: 0 0 9px; }
+.lipatos-actor-importer-dialog .lipatos-actor-importer-hint {
+  margin-top: 9px;
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+.lipatos-actor-importer-preview ul { max-height: 240px; overflow-y: auto; }
