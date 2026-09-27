@@ -1,0 +1,33 @@
+name: Build and publish Foundry module
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate module files
+        run: |
+          node --check scripts/main.js
+          node -e 'const m=require("./module.json"); if(!m.id || !m.version || !m.download) process.exit(1);'
+          node -e 'JSON.parse(require("fs").readFileSync("examples/skeleton-mage.json", "utf8"));'
+      - name: Build ZIP
+        run: zip -q -r lipatos-actor-importer.zip module.json scripts styles README.md examples
+      - name: Publish versioned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v$(node -p 'require("./module.json").version')"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" lipatos-actor-importer.zip --clobber
+          else
+            gh release create "$TAG" lipatos-actor-importer.zip --target "$GITHUB_SHA" --title "LipatoS Actor Importer $TAG" --notes "Сборка модуля Foundry VTT 14 / D&D5e 6.0.5."
+          fi
