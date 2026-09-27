@@ -1,0 +1,45 @@
+{
+  "name": "Скелет-маг",
+  "type": "npc",
+  "img": "icons/svg/mystery-man.svg",
+  "abilities": {
+    "str": 8,
+    "dex": 14,
+    "con": 12,
+    "int": 16,
+    "wis": 10,
+    "cha": 8
+  },
+  "saves": [
+    "int",
+    "wis"
+  ],
+  "skills": {
+    "arc": 2,
+    "prc": 1
+  },
+  "hp": {
+    "value": 45,
+    "max": 45,
+    "temp": 0
+  },
+  "ac": 13,
+  "movement": {
+    "walk": 30,
+    "units": "ft"
+  },
+  "cr": 4,
+  "description": "<p>Пример для проверки импорта. Замените описание, способности и предметы своими данными.</p>",
+  "items": [
+    {
+      "name": "Зловещая аура",
+      "type": "feat",
+      "img": "icons/magic/unholy/hand-marked-pink.webp",
+      "system": {
+        "description": {
+          "value": "<p>Пассивная особенность монстра. Для автоматического броска добавьте system.activities с форматом D&D5e 6.0.5.</p>"
+        }
+      }
+    }
+  ]
+}
