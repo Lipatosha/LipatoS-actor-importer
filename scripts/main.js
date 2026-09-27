@@ -291,3 +291,66 @@ function escapeHTML(value) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[ch]);
 }
+
+// Optional BLFX/Sequencer playback for imported D&D5e attack activities.
+// The importer remains usable without either animation module.
+const animationWarnings = new Set();
+
+Hooks.on("dnd5e.postRollAttack", (rolls, { subject } = {}) => {
+  if (!rolls?.length || !subject?.actor) return;
+  const config = subject.flags?.aindor?.animation ?? subject.item?.flags?.aindor?.animation;
+  if (!config || config.trigger !== "afterAttack" || typeof config.databaseKey !== "string") return;
+  void playImportedAttackAnimation(subject, config).catch(error => {
+    console.error(`${MODULE_ID} | Animation playback failed`, error);
+    warnAnimationOnce(`playback:${config.databaseKey}`, `Не удалось воспроизвести анимацию «${subject.item?.name ?? subject.name}». Подробности в консоли (F12).`);
+  });
+});
+
+async function playImportedAttackAnimation(activity, config) {
+  if (!canvas?.ready) return;
+  if (typeof Sequencer === "undefined" || typeof Sequence === "undefined"
+    || !game.modules?.get("sequencer")?.active) {
+    warnAnimationOnce("sequencer", "Для анимаций импортированных монстров включите модуль Sequencer.");
+    return;
+  }
+
+  const key = config.databaseKey.trim();
+  if (!key) return;
+  let exists = false;
+  try {
+    exists = !!Sequencer.Database.getEntry(key, { softFail: true });
+  } catch (error) {
+    console.warn(`${MODULE_ID} | Animation database lookup failed for ${key}`, error);
+  }
+  if (!exists) {
+    warnAnimationOnce(`asset:${key}`, `BLFX-анимация не найдена: ${key}. Проверьте, что пакет BLFX с этим эффектом включён.`);
+    return;
+  }
+
+  const actor = activity.actor;
+  const sceneTokens = canvas.tokens?.placeables ?? [];
+  const candidates = sceneTokens.filter(token => token.actor?.uuid === actor.uuid || token.actor?.id === actor.id);
+  const source = candidates.find(token => token.controlled) ?? candidates[0];
+  if (!source) {
+    warnAnimationOnce(`source:${actor.id}`, `Для анимации «${activity.item?.name ?? activity.name}» поместите токен монстра на сцену.`);
+    return;
+  }
+
+  // Attack animations need a selected target on the current scene.
+  const target = Array.from(game.user?.targets ?? []).find(token => sceneTokens.includes(token) && token !== source);
+  if (!target) {
+    ui.notifications.warn(`Для анимации «${activity.item?.name ?? activity.name}» выберите цель клавишей T перед броском атаки.`);
+    return;
+  }
+
+  const effect = new Sequence().effect().file(key).atLocation(source).stretchTo(target);
+  const durationMs = Number(config.durationMs);
+  if (Number.isFinite(durationMs) && durationMs > 0) effect.duration(Math.min(durationMs, 30000));
+  await effect.play();
+}
+
+function warnAnimationOnce(key, message) {
+  if (animationWarnings.has(key)) return;
+  animationWarnings.add(key);
+  ui.notifications.warn(message);
+}
